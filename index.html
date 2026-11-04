@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemelo Digital GLP (Simulación)</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly.js para las gráficas -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        input[type=range] {
+            accent-color: #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2 text-red-500">
+                <span>🚨</span> Gemelo Digital Experimental de GLP
+            </h1>
+            <span class="bg-yellow-900/50 text-yellow-300 text-xs px-3 py-1 rounded-full border border-yellow-700">
+                Simulación Interactiva
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- Banner de advertencia -->
+        <div class="lg:col-span-4 bg-amber-950/40 border border-amber-600/50 text-amber-200 p-4 rounded-xl text-sm">
+            <strong>🚨 SIMULACIÓN EDUCATIVA:</strong> No es un detector de gas certificado ni debe controlar alarmas físicas. Utilice un detector y sistema de alarma certificados independientes. Señales sintéticas inspiradas en variables del artículo MQ-6; NO son mediciones experimentales ni un modelo físico validado.
+        </div>
+
+        <!-- Sidebar / Panel de Control -->
+        <aside class="lg:col-span-1 bg-gray-800 p-5 rounded-xl border border-gray-700 space-y-5 h-fit shadow-lg">
+            <h2 class="text-lg font-semibold border-b border-gray-700 pb-2">Configuración de Simulación</h2>
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="flex justify-between font-medium text-gray-300">
+                        <span>Duración (s)</span>
+                        <span id="n_val" class="text-red-400 font-bold">480</span>
+                    </label>
+                    <input type="range" id="n" min="120" max="1200" value="480" step="60" class="w-full">
+                </div>
+
+                <div>
+                    <label class="flex justify-between font-medium text-gray-300">
+                        <span>Inicio de Fuga (s)</span>
+                        <span id="leak_start_val" class="text-red-400 font-bold">80</span>
+                    </label>
+                    <input type="range" id="leak_start" min="10" max="440" value="80" step="10" class="w-full">
+                </div>
+
+                <div>
+                    <label class="flex justify-between font-medium text-gray-300">
+                        <span>Fin de Fuga (s)</span>
+                        <span id="leak_end_val" class="text-red-400 font-bold">260</span>
+                    </label>
+                    <input type="range" id="leak_end" min="20" max="479" value="260" step="10" class="w-full">
+                </div>
+
+                <div>
+                    <label class="flex justify-between font-medium text-gray-300">
+                        <span>Intensidad Fuga (ppm/s)</span>
+                        <span id="source_val" class="text-red-400 font-bold">1.4</span>
+                    </label>
+                    <input type="range" id="source" min="0.2" max="4.0" value="1.4" step="0.1" class="w-full">
+                </div>
+
+                <div>
+                    <label class="flex justify-between font-medium text-gray-300">
+                        <span>Disipación por segundo</span>
+                        <span id="ventilation_val" class="text-red-400 font-bold">0.025</span>
+                    </label>
+                    <input type="range" id="ventilation" min="0.001" max="0.10" value="0.025" step="0.001" class="w-full">
+                </div>
+
+                <div>
+                    <label class="flex justify-between font-medium text-gray-300">
+                        <span>Desviación Ruido (ppm)</span>
+                        <span id="noise_val" class="text-red-400 font-bold">9.0</span>
+                    </label>
+                    <input type="range" id="noise" min="0.0" max="30.0" value="9.0" step="0.5" class="w-full">
+                </div>
+
+                <div>
+                    <label class="block font-medium text-gray-300 mb-1">Distancia (cm)</label>
+                    <select id="distance" class="w-full bg-gray-700 text-white rounded p-1.5 border border-gray-600">
+                        <option value="40">40 cm</option>
+                        <option value="50" selected>50 cm</option>
+                        <option value="60">60 cm</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-medium text-gray-300 mb-1">Altura (cm)</label>
+                    <select id="height" class="w-full bg-gray-700 text-white rounded p-1.5 border border-gray-600">
+                        <option value="22">22 cm</option>
+                        <option value="42" selected>42 cm</option>
+                        <option value="62">62 cm</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="flex justify-between font-medium text-gray-300">
+                        <span>Horizonte predicción (s)</span>
+                        <span id="horizon_val" class="text-red-400 font-bold">10</span>
+                    </label>
+                    <input type="range" id="horizon" min="1" max="20" value="10" step="1" class="w-full">
+                </div>
+
+                <div>
+                    <label class="flex justify-between font-medium text-gray-300">
+                        <span>Umbral Alarma (ppm)</span>
+                        <span id="threshold_val" class="text-red-400 font-bold">147</span>
+                    </label>
+                    <input type="range" id="threshold" min="20" max="300" value="147" step="1" class="w-full">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-medium text-gray-300 mb-1">Kalman Q</label>
+                        <input type="number" id="q" value="1.5" step="0.1" class="w-full bg-gray-700 text-white rounded p-1.5 border border-gray-600">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-300 mb-1">Kalman R</label>
+                        <input type="number" id="r" value="81.0" step="1" class="w-full bg-gray-700 text-white rounded p-1.5 border border-gray-600">
+                    </div>
+                </div>
+
+                <button id="runBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                    Generar y Ejecutar
+                </button>
+            </div>
+        </aside>
+
+        <!-- Panel Principal de Resultados -->
+        <section class="lg:col-span-3 space-y-6">
+
+            <!-- 1. Señales -->
+            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg">
+                <h3 class="text-lg font-semibold text-gray-100 mb-2">1. Señales de Concentración</h3>
+                <div id="chart_signals" class="w-full h-80"></div>
+            </div>
+
+            <!-- 2. Comparación Predictiva -->
+            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg space-y-4">
+                <h3 class="text-lg font-semibold text-gray-100">2. Comparación Predictiva (Último 25% de la serie)</h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-300 border border-gray-700 rounded-lg">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th class="py-2.5 px-4">Modelo</th>
+                                <th class="py-2.5 px-4">Filtro</th>
+                                <th class="py-2.5 px-4">MAE (ppm)</th>
+                                <th class="py-2.5 px-4">RMSE (ppm)</th>
+                                <th class="py-2.5 px-4">R²</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metrics_table" class="divide-y divide-gray-700">
+                            <!-- Filas insertadas dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="best_info" class="p-3 bg-blue-950/40 border border-blue-800 rounded-lg text-xs text-blue-300"></div>
+
+                <div id="chart_pred" class="w-full h-80"></div>
+            </div>
+
+            <!-- 3. Gemelo Digital -->
+            <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg space-y-4">
+                <h3 class="text-lg font-semibold text-gray-100">3. Gemelo Digital y Luz de Emergencia Virtual</h3>
+
+                <div class="space-y-2">
+                    <label class="block text-xs font-medium text-gray-300">Instante de reproducción dentro de la prueba:</label>
+                    <input type="range" id="time_idx" min="0" value="0" step="1" class="w-full">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-700/50 p-4 rounded-lg text-center border border-gray-600">
+                        <span class="text-xs text-gray-400 block">Predicción t + Horizonte</span>
+                        <span id="metric_pred" class="text-2xl font-bold text-white">0.0 ppm</span>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg text-center border border-gray-600">
+                        <span class="text-xs text-gray-400 block">Umbral de Simulación</span>
+                        <span id="metric_thresh" class="text-2xl font-bold text-white">0 ppm</span>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg text-center border border-gray-600">
+                        <span class="text-xs text-gray-400 block">Tiempo Simulado</span>
+                        <span id="metric_time" class="text-2xl font-bold text-white">0 s</span>
+                    </div>
+                </div>
+
+                <div id="alarm_banner" class="p-4 rounded-xl font-bold text-center transition duration-300"></div>
+
+                <pre id="json_state" class="bg-gray-950 text-green-400 text-xs p-3 rounded-lg overflow-x-auto border border-gray-800 font-mono"></pre>
+
+                <!-- Descargas -->
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <button id="download_signals" class="bg-gray-700 hover:bg-gray-600 text-xs text-white px-3 py-2 rounded transition">
+                        Descargar Señales (CSV)
+                    </button>
+                    <button id="download_metrics" class="bg-gray-700 hover:bg-gray-600 text-xs text-white px-3 py-2 rounded transition">
+                        Descargar Métricas (CSV)
+                    </button>
+                    <button id="download_preds" class="bg-gray-700 hover:bg-gray-600 text-xs text-white px-3 py-2 rounded transition">
+                        Descargar Predicciones (CSV)
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-6 text-xs text-gray-500 max-w-7xl mx-auto px-4">
+        Limitaciones: simulador de una zona, sin dinámica CFD; validación temporal simple. Para producción se necesitan mediciones calibradas, ensayos independientes y evaluación de errores.
+    </footer>
+
+    <!-- Lógica de Simulación Javascript -->
+    <script>
+        // Utilidad para generador pseudoaleatorio con semilla (Box-Muller)
+        function createRNG(seed) {
+            let s = seed;
+            return function() {
+                s = Math.sin(s) * 10000;
+                return s - Math.floor(s);
+            };
+        }
+
+        function normalRandom(rng, mean, std) {
+            let u1 = rng();
+            let u2 = rng();
+            let z0 = Math.sqrt(-2.0 * Math.log(u1 || 1e-10)) * Math.cos(2.0 * Math.PI * u2);
+            return z0 * std + mean;
+        }
+
+        // Filtro de Kalman en 1D
+        function kalmanFilter(values, q, r) {
+            let x = values[0];
+            let p = Math.max(r, 1.0);
+            let out = [];
+
+            for (let i = 0; i < values.length; i++) {
+                let z = values[i];
+                p = p + q;
+                let k = p / (p + r);
+                x = x + k * (z - x);
+                p = (1 - k) * p;
+                out.push(x);
+            }
+            return out;
+        }
+
+        // Simulación física sintética
+        function simulate(n, leakStart, leakEnd, source, ventilation, noise, distance, height, seed) {
+            let rng = createRNG(seed);
+            let geo = Math.pow(50 / distance, 1.15) * (height == 42 ? 1.0 : 0.72);
+            let trueVal = new Float64Array(n);
+            let measured = new Float64Array(n);
+            let seg = new Int32Array(n);
+
+            for (let i = 0; i < n; i++) {
+                seg[i] = i;
+                if (i > 0) {
+                    let influx = (i >= leakStart && i < leakEnd) ? source * geo : 0;
+                    trueVal[i] = Math.max(0, trueVal[i-1] * (1 - ventilation) + influx);
+                }
+                measured[i] = Math.max(0, trueVal[i] + normalRandom(rng, 0, noise));
+            }
+
+            return { seg, trueVal, measured };
+        }
+
+        // Regresión lineal con ventana autoregresiva (ligera para el navegador)
+        function linearRegressionPredict(df, signalKey, horizon) {
+            let n = df.seg.length;
+            let X = [];
+            let y = [];
+            let seconds = [];
+
+            for (let i = 12; i < n - horizon; i++) {
+                let s = df[signalKey];
+                let mean5 = (s[i]+s[i-1]+s[i-2]+s[i-3]+s[i-4])/5;
+                let mean12 = 0;
+                for(let k=0; k<12; k++) mean12 += s[i-k];
+                mean12 /= 12;
+
+                let row = [
+                    s[i],           // nivel
+                    s[i-1],         // lag1
+                    s[i-3],         // lag3
+                    s[i-5],         // lag5
+                    mean5,          // media5
+                    mean12,         // media12
+                    s[i] - s[i-3],  // pendiente3
+                    s[i] - s[i-8]   // pendiente8
+                ];
+                X.push(row);
+                y.push(df.trueVal[i + horizon]);
+                seconds.push(df.seg[i]);
+            }
+
+            let split = Math.floor(X.length * 0.75);
+            let X_train = X.slice(0, split);
+            let y_train = y.slice(0, split);
+            let X_test = X.slice(split);
+            let y_test = y.slice(split);
+            let test_seg = seconds.slice(split);
+
+            // Ajuste por mínimos cuadrados (SGD simple / Ridge)
+            let numFeatures = X[0].length;
+            let weights = new Array(numFeatures).fill(0);
+            let bias = 0;
+            let lr = 0.0001;
+
+            // Escalamiento simple y entrenamiento (Gradient Descent)
+            for (let epoch = 0; epoch < 300; epoch++) {
+                for (let i = 0; i < X_train.length; i++) {
+                    let pred = bias;
+                    for (let j = 0; j < numFeatures; j++) pred += weights[j] * X_train[i][j];
+                    let err = pred - y_train[i];
+                    bias -= lr * err * 0.01;
+                    for (let j = 0; j < numFeatures; j++) {
+                        weights[j] -= lr * err * X_train[i][j] * 0.0001;
+                    }
+                }
+            }
+
+            // Predicciones
+            let preds = [];
+            let mae = 0, mse = 0, sumY = 0;
+            for (let i = 0; i < X_test.length; i++) {
+                let p = bias;
+                for (let j = 0; j < numFeatures; j++) p += weights[j] * X_test[i][j];
+                p = Math.max(0, p);
+                preds.push(p);
+
+                let actual = y_test[i];
+                let err = Math.abs(p - actual);
+                mae += err;
+                mse += err * err;
+                sumY += actual;
+            }
+
+            mae /= X_test.length;
+            mse /= X_test.length;
+            let rmse = Math.sqrt(mse);
+            
+            let meanY = sumY / y_test.length;
+            let ssTot = y_test.reduce((acc, val) => acc + Math.pow(val - meanY, 2), 0);
+            let ssRes = y_test.reduce((acc, val, idx) => acc + Math.pow(val - preds[idx], 2), 0);
+            let r2 = 1 - (ssRes / (ssTot || 1));
+
+            return {
+                metrics: { mae, rmse, r2 },
+                testData: { seg: test_seg, real: y_test, pred: preds }
+            };
+        }
+
+        // Gestión del Estado de la App
+        let appState = {};
+
+        function runSimulation() {
+            // Obtención de inputs
+            let n = parseInt(document.getElementById('n').value);
+            let leakStart = parseInt(document.getElementById('leak_start').value);
+            let leakEnd = parseInt(document.getElementById('leak_end').value);
+            let source = parseFloat(document.getElementById('source').value);
+            let ventilation = parseFloat(document.getElementById('ventilation').value);
+            let noise = parseFloat(document.getElementById('noise').value);
+            let distance = parseInt(document.getElementById('distance').value);
+            let height = parseInt(document.getElementById('height').value);
+            let horizon = parseInt(document.getElementById('horizon').value);
+            let threshold = parseFloat(document.getElementById('threshold').value);
+            let q = parseFloat(document.getElementById('q').value);
+            let r = parseFloat(document.getElementById('r').value);
+
+            // 1. Simulación y Filtro de Kalman
+            let df = simulate(n, leakStart, leakEnd, source, ventilation, noise, distance, height, 42);
+            df.kalman = kalmanFilter(df.measured, q, r);
+
+            // 2. Entrenamiento de modelos
+            let resNoKalman = linearRegressionPredict(df, 'measured', horizon);
+            let resKalman = linearRegressionPredict(df, 'kalman', horizon);
+
+            appState = {
+                df,
+                threshold,
+                horizon,
+                resNoKalman,
+                resKalman
+            };
+
+            // Dibujar Gráfica 1: Señales
+            let traceReal = { x: Array.from(df.seg), y: Array.from(df.trueVal), mode: 'lines', name: 'Concentración real' };
+            let traceNoisy = { x: Array.from(df.seg), y: Array.from(df.measured), mode: 'lines', name: 'Lectura con ruido' };
+            let traceKalman = { x: Array.from(df.seg), y: Array.from(df.kalman), mode: 'lines', name: 'Estimación Kalman' };
+
+            let layout1 = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#e5e7eb' },
+                margin: { t: 20, r: 20, l: 40, b: 40 },
+                xaxis: { title: 'Tiempo (s)', gridcolor: '#374151' },
+                yaxis: { title: 'ppm', gridcolor: '#374151' },
+                shapes: [{
+                    type: 'line', x0: 0, x1: n, y0: threshold, y1: threshold,
+                    line: { color: '#ef4444', dash: 'dash' }
+                }]
+            };
+            Plotly.newPlot('chart_signals', [traceReal, traceNoisy, traceKalman], layout1);
+
+            // 3. Renderizar Tabla de Métricas
+            let tbody = document.getElementById('metrics_table');
+            tbody.innerHTML = `
+                <tr class="bg-gray-800">
+                    <td class="py-2 px-4 font-medium">Regresión Lineal</td>
+                    <td class="py-2 px-4 text-gray-400">Sin Kalman</td>
+                    <td class="py-2 px-4">${resNoKalman.metrics.mae.toFixed(2)}</td>
+                    <td class="py-2 px-4">${resNoKalman.metrics.rmse.toFixed(2)}</td>
+                    <td class="py-2 px-4">${resNoKalman.metrics.r2.toFixed(3)}</td>
+                </tr>
+                <tr class="bg-gray-800/50">
+                    <td class="py-2 px-4 font-medium">Regresión Lineal</td>
+                    <td class="py-2 px-4 text-gray-400">Con Kalman</td>
+                    <td class="py-2 px-4">${resKalman.metrics.mae.toFixed(2)}</td>
+                    <td class="py-2 px-4">${resKalman.metrics.rmse.toFixed(2)}</td>
+                    <td class="py-2 px-4">${resKalman.metrics.r2.toFixed(3)}</td>
+                </tr>
+            `;
+
+            let best = resKalman.metrics.rmse < resNoKalman.metrics.rmse ? 'Con Kalman' : 'Sin Kalman';
+            let bestRmse = Math.min(resKalman.metrics.rmse, resNoKalman.metrics.rmse);
+            document.getElementById('best_info').innerText = `Menor RMSE de prueba: Regresión Lineal / ${best} (${bestRmse.toFixed(2)} ppm). Resultado sintético no validado.`;
+
+            // Dibujar Gráfica 2: Predicción
+            let predData = resKalman.testData;
+            let tracePredReal = { x: predData.seg, y: predData.real, mode: 'lines', name: 'Real en t+h' };
+            let tracePredEst = { x: predData.seg, y: predData.pred, mode: 'lines', name: 'Predicción t+h' };
+
+            let layout2 = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#e5e7eb' },
+                margin: { t: 20, r: 20, l: 40, b: 40 },
+                xaxis: { title: 'Tiempo t (s)', gridcolor: '#374151' },
+                yaxis: { title: 'ppm', gridcolor: '#374151' },
+                shapes: [{
+                    type: 'line', x0: predData.seg[0], x1: predData.seg[predData.seg.length-1],
+                    y0: threshold, y1: threshold, line: { color: '#ef4444', dash: 'dash' }
+                }]
+            };
+            Plotly.newPlot('chart_pred', [tracePredReal, tracePredEst], layout2);
+
+            // Configurar slider de gemelo digital
+            let timeSlider = document.getElementById('time_idx');
+            timeSlider.max = predData.seg.length - 1;
+            timeSlider.value = predData.seg.length - 1;
+            updateDigitalTwin();
+        }
+
+        function updateDigitalTwin() {
+            let idx = parseInt(document.getElementById('time_idx').value);
+            let predData = appState.resKalman.testData;
+
+            let currentPred = predData.pred[idx];
+            let currentTime = predData.seg[idx];
+            let isAlert = currentPred >= appState.threshold;
+
+            document.getElementById('metric_pred').innerText = `${currentPred.toFixed(1)} ppm`;
+            document.getElementById('metric_thresh').innerText = `${appState.threshold} ppm`;
+            document.getElementById('metric_time').innerText = `${currentTime} s`;
+
+            let banner = document.getElementById('alarm_banner');
+            if (isAlert) {
+                banner.className = 'p-4 rounded-xl font-bold text-center bg-red-900/80 text-red-200 border border-red-600 animate-pulse';
+                banner.innerText = '🔴 LUZ DE EMERGENCIA VIRTUAL ENCENDIDA — predicción ≥ umbral';
+            } else {
+                banner.className = 'p-4 rounded-xl font-bold text-center bg-green-900/40 text-green-300 border border-green-700';
+                banner.innerText = '🟢 LUZ VIRTUAL APAGADA — predicción inferior al umbral';
+            }
+
+            let jsonState = {
+                simulacion: true,
+                segundo: currentTime,
+                horizonte_s: appState.horizon,
+                modelo: 'Regresión Lineal',
+                filtro: 'Con Kalman',
+                prediccion_ppm: Number(currentPred.toFixed(3)),
+                umbral_ppm: appState.threshold,
+                luz_emergencia_virtual: isAlert
+            };
+
+            document.getElementById('json_state').innerText = JSON.stringify(jsonState, null, 2);
+        }
+
+        // Descargas CSV
+        function downloadCSV(content, filename) {
+            let blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+
+        // Event Listeners para inputs interactivos
+        document.querySelectorAll('input[type=range]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                let valSpan = document.getElementById(`${e.target.id}_val`);
+                if (valSpan) valSpan.innerText = e.target.value;
+            });
+        });
+
+        document.getElementById('runBtn').addEventListener('click', runSimulation);
+        document.getElementById('time_idx').addEventListener('input', updateDigitalTwin);
+
+        document.getElementById('download_signals').addEventListener('click', () => {
+            let df = appState.df;
+            let csv = 'segundo,concentracion_real_simulada,lectura_ruidosa,lectura_kalman\n';
+            for (let i = 0; i < df.seg.length; i++) {
+                csv += `${df.seg[i]},${df.trueVal[i]},${df.measured[i]},${df.kalman[i]}\n`;
+            }
+            downloadCSV(csv, 'senales_glp_sinteticas.csv');
+        });
+
+        document.getElementById('download_metrics').addEventListener('click', () => {
+            let csv = 'Modelo,Filtro,MAE (ppm),RMSE (ppm),R2\n';
+            csv += `Regresion Lineal,Sin Kalman,${appState.resNoKalman.metrics.mae},${appState.resNoKalman.metrics.rmse},${appState.resNoKalman.metrics.r2}\n`;
+            csv += `Regresion Lineal,Con Kalman,${appState.resKalman.metrics.mae},${appState.resKalman.metrics.rmse},${appState.resKalman.metrics.r2}\n`;
+            downloadCSV(csv, 'metricas_modelos.csv');
+        });
+
+        document.getElementById('download_preds').addEventListener('click', () => {
+            let p = appState.resKalman.testData;
+            let csv = 'segundo,real_futuro,prediccion\n';
+            for (let i = 0; i < p.seg.length; i++) {
+                csv += `${p.seg[i]},${p.real[i]},${p.pred[i]}\n`;
+            }
+            downloadCSV(csv, 'predicciones.csv');
+        });
+
+        // Inicializar al cargar
+        window.onload = runSimulation;
+    </script>
+</body>
+</html>
